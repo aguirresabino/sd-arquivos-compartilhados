@@ -8,6 +8,8 @@ import java.io.IOError;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -17,17 +19,29 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
+import br.edu.com.ifpb.sd.*;
 import br.edu.com.ifpb.sd.Message.MessageType;
+import jcifs.http.NtlmHttpURLConnection;
+import jcifs.smb.NtlmPasswordAuthentication;
+import jcifs.smb.SmbException;
+import jcifs.smb.SmbFile;
+import jcifs.smb.SmbFileInputStream;
+import jcifs.smb.SmbFileOutputStream;
 
 public class Loader {
 	
 	private static Scanner scanner = new Scanner(System.in);
-	private static MessageController messageController = new MessageController(new MessageService("chat.bin"));
+	private static MessageController messageController = new MessageController(
+			new MessageService(
+					"smb://192.168.0.109/chat/chat.bin", 
+					new NtlmPasswordAuthentication(null, "aguirre", "1234")
+					)
+			);
 	private static String nome;
 	
-	private static void login() {
+	private static boolean login() {
 		Message msg = new Message(nome, MessageType.LOGIN, String.format("%s está disponível.", nome), LocalDateTime.now());
-		messageController.writeMessage(msg);
+		return messageController.writeMessage(msg);
 	}
 	
 	private static void exit() {
@@ -58,7 +72,7 @@ public class Loader {
 			print("Carregando todas as mensagens...");
 			List<Message> messages = messageController.readMessages();
 			messages.stream().forEach(ms -> {
-				print(String.format("%s, %s", ms.getId(), ms.getMsg()));
+				print(String.format("%s: %s", ms.getId(), ms.getMsg()));
 			});
 			break;
 		case 3:
@@ -74,17 +88,20 @@ public class Loader {
 		Logger log = java.util.logging.Logger.getLogger(Loader.class.getName());
 		
 		print("Acesse o chat");
-		print("Informe o seu nome:");
-		nome = scanner.next();
-		log.info("Realizando login do usuário");
-		login();
+		boolean loginFeito = false;
+		while(!loginFeito) {
+			print("Informe o seu nome:");
+			nome = scanner.next();
+			log.info("Realizando login do usuário");
+			loginFeito = login();
+		}
 		
 		log.info("Carregando as mensagens pela primeira vez");
 		List<Message> messages = messageController.readMessages();
 		log.info("Imprimindo as mensagens no console");
 		messages.stream().forEach(msg -> print(String.format("%s: %s", msg.getId(), msg.getMsg())));
 		
-		for(;;) menu();		
+		for(;;) menu();
 	}
 
 }

@@ -16,7 +16,7 @@ public class MessageController {
 		this.messageService = messageService;
 	}
 	
-	public void writeMessage(Message msg) {
+	public boolean writeMessage(Message msg) {
 		if(this.messageService.canWrite()) {
 			log.info("O arquivo está disponível para escrita");
 			log.info("Travando o arquivo");
@@ -25,8 +25,10 @@ public class MessageController {
 			messageService.save(msg);
 			log.info("Removendo trava do arquivo");
 			messageService.unlock();
+			return true;
 		} else {
 			log.info("O arquivo não está disponível para escrita...\nTente novamente mais tarde.");
+			return false;
 		}
 	}
 	
