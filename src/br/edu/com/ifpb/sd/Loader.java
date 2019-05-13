@@ -1,32 +1,13 @@
 package br.edu.com.ifpb.sd;
 
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOError;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.MalformedURLException;
-import java.net.UnknownHostException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import br.edu.com.ifpb.sd.Message.MessageType;
+import jcifs.smb.NtlmPasswordAuthentication;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Logger;
-
-import br.edu.com.ifpb.sd.*;
-import br.edu.com.ifpb.sd.Message.MessageType;
-import jcifs.http.NtlmHttpURLConnection;
-import jcifs.smb.NtlmPasswordAuthentication;
-import jcifs.smb.SmbException;
-import jcifs.smb.SmbFile;
-import jcifs.smb.SmbFileInputStream;
-import jcifs.smb.SmbFileOutputStream;
 
 public class Loader {
 	
@@ -40,13 +21,13 @@ public class Loader {
 	private static String nome;
 	
 	private static boolean login() {
-		Message msg = new Message(nome, MessageType.LOGIN, String.format("%s está disponível.", nome), LocalDateTime.now());
+		Message msg = new Message(nome, MessageType.LOGIN, String.format("%s está disponível.", nome), Instant.now());
 		return messageController.writeMessage(msg);
 	}
 	
 	private static void exit() {
-		Message msg = new Message(nome, MessageType.EXIT, String.format("%s saiu do chat.", nome), LocalDateTime.now());
-		messageController.writeMessage(msg);
+		Message msg = new Message(nome, MessageType.EXIT, String.format("%s saiu do chat.", nome), Instant.now());
+		while(!messageController.writeMessage(msg)) print("Saindo...");
 	}
 	
 	private static void sendMsg(Message msg) {
@@ -63,10 +44,10 @@ public class Loader {
 		
 		switch(op) {
 		case 1:
-			print("Digete uma mensagem:");
+			print("Digite uma mensagem:");
 			String bodyMsg = scanner.next();
-			Message msg = new Message(nome, MessageType.MESSAGE, bodyMsg, LocalDateTime.now());
-			messageController.writeMessage(msg);
+			Message msg = new Message(nome, MessageType.MESSAGE, bodyMsg, Instant.now());
+			if(!messageController.writeMessage(msg)) print("Tente enviar esta mensagem novamente mais tarde!");
 			break;
 		case 2:
 			print("Carregando todas as mensagens...");

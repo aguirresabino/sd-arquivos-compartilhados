@@ -17,19 +17,24 @@ public class MessageController {
 	}
 	
 	public boolean writeMessage(Message msg) {
+		boolean isWrite = false;
 		if(this.messageService.canWrite()) {
 			log.info("O arquivo está disponível para escrita");
 			log.info("Travando o arquivo");
-			this.messageService.lock();
-			log.info("Enviando mensagem");
-			messageService.save(msg);
-			log.info("Removendo trava do arquivo");
-			messageService.unlock();
-			return true;
+			// Caso mais de um usuário consiga acessar o arquivo simultâneamente, é verificado se o lock foi concluído.
+			// Quando o primeiro lock for feito, os outros receberão uma exceção e o método MessageService.lock() retornará false.
+			if(this.messageService.lock()) {
+				log.info("Enviando mensagem");
+				messageService.save(msg);
+				log.info("Removendo trava do arquivo");
+				messageService.unlock();
+				isWrite = true;
+			}
 		} else {
 			log.info("O arquivo não está disponível para escrita...\nTente novamente mais tarde.");
-			return false;
 		}
+
+		return isWrite;
 	}
 	
 	public List<Message> readMessages() {

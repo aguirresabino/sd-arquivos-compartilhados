@@ -8,6 +8,8 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -30,13 +32,14 @@ public class MessageService {
 		this.auth = auth;
 		try {
 			SmbFile file = new SmbFile(pathToFile, this.auth);
+			file.createNewFile();
 			
 			if(!file.exists()) {
 				log.info("Criando arquivo pois ele não existe");
 				file.createNewFile();
 			}
 		} catch (MalformedURLException | SmbException e) {
-			log.info(e.getStackTrace().toString());
+			log.info(e.getMessage());
 		}
 	}
 	
@@ -56,8 +59,14 @@ public class MessageService {
 	
 	public void save(Message msg) {
 		List<Message> messages = this.read();
-		messages.add(msg);
-		
+
+		if(!messages.isEmpty() && messages != null && messages.get(messages.size() - 1).getTmstp().isAfter(msg.getTmstp())) {
+			messages.add(msg);
+			Collections.sort(messages);
+		} else {
+			messages.add(msg);
+		}
+
 		try {
 			log.info("Escrevendo no arquivo.");
 			ObjectOutputStream oos = new ObjectOutputStream(new SmbFileOutputStream(new SmbFile(this.pathToFile, this.auth)));
@@ -70,13 +79,15 @@ public class MessageService {
 		}
 	}
 	
-	public void lock() {
+	public boolean lock() {
 		try {
 			log.info("Travando o arquivo para escrita.");
 			SmbFile newFile = new SmbFile(pathToFile + ".lock", auth);
 			newFile.createNewFile();
+			return true;
 		} catch (IOException e) {
 			log.info(e.getMessage());
+			return false;
 		}
 	}
 	
