@@ -1,0 +1,7 @@
+bin/
+.classpath
+.project
+.DS_Store
+chat.bin
+.idea/
+sd-arquivos-compartilhados.iml

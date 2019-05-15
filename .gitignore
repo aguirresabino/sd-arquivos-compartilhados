@@ -5,3 +5,5 @@ bin/
 chat.bin
 .idea/
 sd-arquivos-compartilhados.iml
+classes/
+instantlastmsgread.bin
